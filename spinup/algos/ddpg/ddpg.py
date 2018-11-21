@@ -43,7 +43,7 @@ Deep Deterministic Policy Gradient (DDPG)
 
 """
 def ddpg(env_fn, actor_critic=core.mlp_actor_critic, ac_kwargs=dict(), seed=0, 
-         steps_per_epoch=5000, epochs=100, replay_size=int(1e6), gamma=0.99, 
+         steps_per_epoch=5000, epochs=200, replay_size=int(1e6), gamma=0.99, 
          polyak=0.995, pi_lr=1e-3, q_lr=1e-3, batch_size=100, start_steps=10000, 
          act_noise=0.1, max_ep_len=1000, logger_kwargs=dict(), save_freq=1):
     """
