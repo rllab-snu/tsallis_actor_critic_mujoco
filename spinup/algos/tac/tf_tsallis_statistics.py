@@ -44,7 +44,7 @@ def tf_random_q_normal(shape,q):
     q_prime = (3-q) / (1+q)
     U1 = tf.random_uniform(shape)
     U2 = tf.random_uniform(shape)
-    return tf.sqrt(-2.*tf_log_q(U1,q=q))*tf.cos(tf.constant(2*np.pi)*U2)
+    return tf.sqrt(-2.*tf_log_q(U1,q=q_prime))*tf.cos(tf.constant(2*np.pi)*U2)
 
 def tf_q_gaussian_distribution(x, mu, log_invbeta, q):
     gamma1 = tf.exp(tf.lgamma(1/(q-1)))
@@ -53,11 +53,4 @@ def tf_q_gaussian_distribution(x, mu, log_invbeta, q):
     C_q = tf.cond(tf.equal(q,1),true_fn=lambda: tf.constant(1./np.sqrt(2.),dtype=tf.float32),false_fn=lambda: tf.sqrt(tf.constant(2.,dtype=tf.float32)) * gamma1 /gamma2 /tf.sqrt(q-1)/(1+q))
     
     tf_pdf = tf_exp_q(-0.5*tf.square((x-mu) /(tf.exp(log_invbeta)+1e-8)),q=q) /C_q / tf.sqrt(tf.constant(2.*np.pi,dtype=tf.float32))
-    return tf_pdf
-    
-    
-    
-    
-    
-    
-    
+    return tf_pdf    
