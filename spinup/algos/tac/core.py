@@ -70,16 +70,12 @@ def mlp_q_gaussian_policy(x, a, q, hidden_sizes, activation, output_activation):
     log_invbeta = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (log_invbeta + 1)
 
     invbeta = tf.exp(log_invbeta)
-    pi = mu + tf_random_q_normal(tf.shape(mu),q=q) * invbeta / tf.sqrt( 1 + q )
+    pi = mu + tf_random_q_normal(tf.shape(mu),q_prime=q) * invbeta
     
     squashed_mu = tf.tanh(mu)
     squashed_pi = tf.tanh(pi)
     
-    q_logp_pi = tf_log_q(
-        tf.reduce_prod(
-            tf_q_gaussian_distribution(pi, mu, log_invbeta, q=q) * (clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6),
-            axis=1), 
-        q=q)
+    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q_prime=q) * tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6, axis=1),q=q)
     return squashed_mu, squashed_pi, q_logp_pi
 
 """
