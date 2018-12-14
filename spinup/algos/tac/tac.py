@@ -219,7 +219,7 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
             o, r, d, ep_ret, ep_len = test_env.reset(), 0, False, 0, 0
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
-                a = get_action(o, True)
+                a = get_action(o, True)   
                 o, r, d, _ = test_env.step(a)
                 ep_ret += r
                 ep_len += 1
@@ -241,7 +241,7 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
             a = get_action(o)
         else:
             a = env.action_space.sample()
-
+        
         # Step the env
         o2, r, d, _ = env.step(a)
         ep_ret += r
@@ -278,7 +278,6 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
                 logger.store(LossPi=outs[0], LossQ1=outs[1], LossQ2=outs[2],
                              LossV=outs[3], Q1Vals=outs[4], Q2Vals=outs[5],
                              VVals=outs[6], LogPi=outs[7])
-
             logger.store(EpRet=ep_ret, EpLen=ep_len)
             o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
 

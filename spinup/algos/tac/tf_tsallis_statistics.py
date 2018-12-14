@@ -24,7 +24,7 @@ def tf_exp_q(x,q):
     return exp_q_x
     
 def tf_log_q(x,q):
-    safe_x = tf.maximum(x,0)
+    safe_x = tf.maximum(x,1e-8)
     log_q_x = tf.cond(tf.equal(q,1.),true_fn=lambda: tf.log(safe_x),false_fn=lambda: (tf.pow(safe_x,q-1)-1)/(q-1))
     return log_q_x
 
@@ -65,7 +65,7 @@ def tf_q_gaussian_distribution(x, mu, log_std, q_prime):
                   false_fn=lambda: tf.pow(tf.sqrt(((dim+4.)-(dim+2.)*q)/(1.-q)*tf.constant(np.pi,dtype=tf.float32)),dim)*gamma1/gamma2
                  )
 
-    return tf_exp_q(-tf.reduce_sum(tf.square((x-mu)/std),axis=1)/((dim+4.)-(dim+2)*q),q=2-q)/K_q/tf.reduce_prod(std,axis=1)
+    return tf_exp_q(-tf.reduce_sum(tf.square((x-mu)/std),axis=1)/((dim+4.)-(dim+2.)*q),q=2.-q)/K_q/tf.reduce_prod(std,axis=1)
 
 # Sampling q Gaussian using Box Muller Transform
 #def tf_random_q_normal(shape,q):

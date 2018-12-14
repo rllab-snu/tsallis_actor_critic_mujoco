@@ -26,7 +26,7 @@ def count_vars(scope):
     return sum([np.prod(var.shape.as_list()) for var in v])
 
 def gaussian_likelihood(x, mu, log_std):
-    pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 + 2*log_std + np.log(2*np.pi))
+    pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 - 2*log_std - np.log(2*np.pi))
     return tf.reduce_sum(pre_sum, axis=1)
 
 def clip_but_pass_gradient(x, l=-1., u=1.):
@@ -39,8 +39,8 @@ def clip_but_pass_gradient(x, l=-1., u=1.):
 Policies
 """
 
-LOG_STD_MAX = 2
-LOG_STD_MIN = -20
+LOG_STD_MAX = 6
+LOG_STD_MIN = -2
 
 def mlp_q_gaussian_policy(x, a, q, hidden_sizes, activation, output_activation):
     act_dim = a.shape.as_list()[-1]
@@ -70,13 +70,28 @@ def mlp_q_gaussian_policy(x, a, q, hidden_sizes, activation, output_activation):
     log_invbeta = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (log_invbeta + 1)
 
     invbeta = tf.exp(log_invbeta)
-    pi = mu + tf_random_q_normal(tf.shape(mu),q_prime=q) * invbeta
-    
+    pi = mu + tf_random_q_normal(tf.shape(mu),q) * invbeta
+
     squashed_mu = tf.tanh(mu)
     squashed_pi = tf.tanh(pi)
-    
-    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q_prime=q) * tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6, axis=1),q=q)
+
+    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q),q=q) - tf.reduce_sum(tf_log_q(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-8,q=q), axis=1)
+#    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-4, axis=1),q=q)
     return squashed_mu, squashed_pi, q_logp_pi
+
+#    log_std = tf.layers.dense(net, act_dim, activation=tf.tanh)
+#    log_std = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (log_std + 1)
+
+#    std = tf.exp(log_std)
+#    pi = mu + tf.random_normal(tf.shape(mu)) * std
+#    logp_pi = gaussian_likelihood(pi, mu, log_std)
+    
+#    squashed_mu = tf.tanh(mu)
+#    squashed_pi = tf.tanh(pi)
+    
+#    logp_pi -= tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6), axis=1)
+    
+#    return squashed_mu, squashed_pi, logp_pi
 
 """
 Actor-Critics
