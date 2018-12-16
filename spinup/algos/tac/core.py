@@ -40,7 +40,7 @@ Policies
 """
 
 LOG_STD_MAX = 6
-LOG_STD_MIN = -2
+LOG_STD_MIN = -4
 
 def mlp_q_gaussian_policy(x, a, q, hidden_sizes, activation, output_activation):
     act_dim = a.shape.as_list()[-1]
@@ -75,7 +75,7 @@ def mlp_q_gaussian_policy(x, a, q, hidden_sizes, activation, output_activation):
     squashed_mu = tf.tanh(mu)
     squashed_pi = tf.tanh(pi)
 
-    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q),q=q) - tf.reduce_sum(tf_log_q(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-8,q=q), axis=1)
+    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q),q=q) - tf.reduce_sum(tf_log_q(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-8, q=q), axis=1)
 #    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-4, axis=1),q=q)
     return squashed_mu, squashed_pi, q_logp_pi
 

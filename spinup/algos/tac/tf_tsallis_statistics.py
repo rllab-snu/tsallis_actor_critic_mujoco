@@ -53,10 +53,15 @@ def tf_random_q_normal(shape,q_prime):
 
     x = tf.cond(tf.equal(q,1.0),true_fn=lambda: z,false_fn=lambda: tf.sqrt((dim+2-dim*q)/(1-q))*z/tf.sqrt(a+z_square))
     return x
+
+#def tf_q_gaussian_likelihood(x, mu, log_std, q_prime):
+#    q = 2.- q_prime
+#    std = tf.exp(log_std)+1e-8
+#    return -tf.reduce_sum(tf.square((x-mu)/std),axis=1)/((dim+4.)-(dim+2.)*q) - 
     
 def tf_q_gaussian_distribution(x, mu, log_std, q_prime):
     q = 2.- q_prime
-    std = tf.exp(log_std)+1e-8
+    std = tf.exp(log_std)+1e-6
     dim = tf.cast(tf.shape(x),tf.float32)[1]
     gamma1 = tf.exp(tf.lgamma((2.-q)/(1.-q)))
     gamma2 = tf.exp(tf.lgamma((2.-q)/(1.-q)+dim/2.))
