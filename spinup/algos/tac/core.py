@@ -4,6 +4,9 @@ from spinup.algos.tac.tf_tsallis_statistics import *
 
 EPS = 1e-8
 
+def scale_holder():
+    return tf.placeholder(dtype=tf.float32, shape=())
+
 def entropic_index_holder():
     return tf.placeholder(dtype=tf.float32, shape=())
 
@@ -34,73 +37,53 @@ def clip_but_pass_gradient(x, l=-1., u=1.):
     clip_low = tf.cast(x < l, tf.float32)
     return x + tf.stop_gradient((u - x)*clip_up + (l - x)*clip_low)
 
-
 """
 Policies
 """
 
-LOG_STD_MAX = 6
-LOG_STD_MIN = -4
+LOG_STD_MAX = 2
+LOG_STD_MIN = -20
 
-def mlp_q_gaussian_policy(x, a, q, hidden_sizes, activation, output_activation):
+def mlp_q_gaussian_policy(x, a, q, hidden_sizes, activation, output_activation, pdf_type="gaussian", log_type="q-log"):
     act_dim = a.shape.as_list()[-1]
     net = mlp(x, list(hidden_sizes), activation, activation)
+    
     mu = tf.layers.dense(net, act_dim, activation=output_activation)
-
-    """
-    Because algorithm maximizes trade-off of reward and entropy,
-    entropy must be unique to state---and therefore log_stds need
-    to be a neural network output instead of a shared-across-states
-    learnable parameter vector. But for deep Relu and other nets,
-    simply sticking an activationless dense layer at the end would
-    be quite bad---at the beginning of training, a randomly initialized
-    net could produce extremely large values for the log_stds, which
-    would result in some actions being either entirely deterministic
-    or too random to come back to earth. Either of these introduces
-    numerical instability which could break the algorithm. To 
-    protect against that, we'll constrain the output range of the 
-    log_stds, to lie within [LOG_STD_MIN, LOG_STD_MAX]. This is 
-    slightly different from the trick used by the original authors of
-    SAC---they used tf.clip_by_value instead of squashing and rescaling.
-    I prefer this approach because it allows gradient propagation
-    through log_std where clipping wouldn't, but I don't know if
-    it makes much of a difference.
-    """
-    log_invbeta = tf.layers.dense(net, act_dim, activation=tf.tanh)
-    log_invbeta = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (log_invbeta + 1)
-
-    invbeta = tf.exp(log_invbeta)
-    pi = mu + tf_random_q_normal(tf.shape(mu),q) * invbeta
-
-    squashed_mu = tf.tanh(mu)
-    squashed_pi = tf.tanh(pi)
-
-    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q),q=q) - tf.reduce_sum(tf_log_q(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-8, q=q), axis=1)
-#    q_logp_pi = tf_log_q(tf_q_gaussian_distribution(pi, mu, log_invbeta, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-4, axis=1),q=q)
+    
+    log_std = tf.layers.dense(net, act_dim, activation=tf.tanh)
+    log_std = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (log_std + 1)
+    std = tf.exp(log_std)
+    
+    if pdf_type=="gaussian" and log_type=="q-log":
+        pi = mu + tf.random_normal(tf.shape(mu)) * std
+        squashed_mu = tf.tanh(mu)
+        squashed_pi = tf.tanh(pi)
+        logp_pi = gaussian_likelihood(pi, mu, log_std) - tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6), axis=1)
+        q_logp_pi = tf_log_q(tf.exp(logp_pi),q)
+        
+    elif pdf_type=="q-gaussian" and log_type=="q-log":
+        pi = mu + tf_random_q_normal(tf.shape(mu),q) * std
+        squashed_mu = tf.tanh(mu)
+        squashed_pi = tf.tanh(pi)
+        p_pi = tf_q_gaussian_distribution(pi, mu, log_std, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6, axis=1)
+        q_logp_pi = tf_log_q(p_pi,q)
+    
+    elif pdf_type=="gaussian" and log_type=="log":
+        pi = mu + tf.random_normal(tf.shape(mu)) * std
+        squashed_mu = tf.tanh(mu)
+        squashed_pi = tf.tanh(pi)
+        q_logp_pi = gaussian_likelihood(pi, mu, log_std) - tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6), axis=1)
+    
     return squashed_mu, squashed_pi, q_logp_pi
-
-#    log_std = tf.layers.dense(net, act_dim, activation=tf.tanh)
-#    log_std = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (log_std + 1)
-
-#    std = tf.exp(log_std)
-#    pi = mu + tf.random_normal(tf.shape(mu)) * std
-#    logp_pi = gaussian_likelihood(pi, mu, log_std)
-    
-#    squashed_mu = tf.tanh(mu)
-#    squashed_pi = tf.tanh(pi)
-    
-#    logp_pi -= tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1) + 1e-6), axis=1)
-    
-#    return squashed_mu, squashed_pi, logp_pi
 
 """
 Actor-Critics
 """
 def mlp_q_actor_critic(x, a, q, hidden_sizes=(400,300), activation=tf.nn.relu, 
-                     output_activation=None, policy=mlp_q_gaussian_policy, action_space=None):
+                     output_activation=None, policy=mlp_q_gaussian_policy, pdf_type="gaussian", log_type="q-log", action_space=None):
     # policy
     with tf.variable_scope('pi'):
-        mu, pi, q_logp_pi = policy(x, a, q, hidden_sizes, activation, output_activation)
+        mu, pi, q_logp_pi = policy(x, a, q, hidden_sizes, activation, output_activation, pdf_type=pdf_type, log_type=log_type)
         
     # make sure actions are in correct range
     action_scale = action_space.high[0]

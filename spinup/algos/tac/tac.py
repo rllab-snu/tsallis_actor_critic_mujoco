@@ -6,6 +6,42 @@ from spinup.algos.tac import core
 from spinup.algos.tac.core import get_vars
 from spinup.utils.logx import EpochLogger
 
+class Alpha:
+    def __init__(self, alpha_start=0.2, alpha_end=2e-3, speed=2.0, schedule='constant'):
+        self.alpha_start = alpha_start
+        self.alpha_end = alpha_end
+        self.schedule = schedule
+        self.speed = speed
+        self.count = 0
+
+    def __call__(self, ret=None):
+        if self.schedule == 'constant':
+            return self.alpha_start
+        elif self.schedule == 'logarithm':
+            self.count += 1
+            return np.maximum(
+                self.alpha_end,
+                np.minimum(
+                    self.alpha_start,
+                    self.alpha_start/np.maximum(np.log(self.count*self.speed+1e-3),1)
+                )
+            )
+
+class EntropicIndex:
+    def __init__(self, q_start=1.0, q_end=0.0, speed=0.02, schedule='constant'):
+        self.q_start = q_start
+        self.q_end = q_end
+        self.prev_ret = None
+        self.schedule = schedule
+        self.speed = speed
+        self.count = 0
+
+    def __call__(self, ret=None):
+        if self.schedule == 'constant':
+            return self.q_end
+        elif self.schedule == 'linear':
+            self.count += 1
+            return np.maximum(self.q_end,np.minimum(self.q_start,self.q_start+(self.q_end-self.q_start)*np.maximum(self.count*self.speed-0.2,0)))
 
 class ReplayBuffer:
     """
@@ -39,89 +75,18 @@ class ReplayBuffer:
 
 def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=5000, epochs=200, replay_size=int(1e6), gamma=0.99, 
-        polyak=0.995, lr=1e-3, alpha=0.2, q=1.0, batch_size=100, start_steps=10000, 
+        polyak=0.995, lr=1e-3,
+        alpha=0.2, alpha_schedule='constant', q=1.0, q_schedule='constant',
+        pdf_type='gaussian',log_type='q-log',
+        batch_size=100, start_steps=10000, 
         max_ep_len=1000, logger_kwargs=dict(), save_freq=1):
-    """
 
-    Args:
-        env_fn : A function which creates a copy of the environment.
-            The environment must satisfy the OpenAI Gym API.
-
-        actor_critic: A function which takes in placeholder symbols 
-            for state, ``x_ph``, and action, ``a_ph``, and returns the main 
-            outputs from the agent's Tensorflow computation graph:
-
-            ===========  ================  ======================================
-            Symbol       Shape             Description
-            ===========  ================  ======================================
-            ``mu``       (batch, act_dim)  | Computes mean actions from policy
-                                           | given states.
-            ``pi``       (batch, act_dim)  | Samples actions from policy given 
-                                           | states.
-            ``logp_pi``  (batch,)          | Gives log probability, according to
-                                           | the policy, of the action sampled by
-                                           | ``pi``. Critical: must be differentiable
-                                           | with respect to policy parameters all
-                                           | the way through action sampling.
-            ``q1``       (batch,)          | Gives one estimate of Q* for 
-                                           | states in ``x_ph`` and actions in
-                                           | ``a_ph``.
-            ``q2``       (batch,)          | Gives another estimate of Q* for 
-                                           | states in ``x_ph`` and actions in
-                                           | ``a_ph``.
-            ``q1_pi``    (batch,)          | Gives the composition of ``q1`` and 
-                                           | ``pi`` for states in ``x_ph``: 
-                                           | q1(x, pi(x)).
-            ``q2_pi``    (batch,)          | Gives the composition of ``q2`` and 
-                                           | ``pi`` for states in ``x_ph``: 
-                                           | q2(x, pi(x)).
-            ``v``        (batch,)          | Gives the value estimate for states
-                                           | in ``x_ph``. 
-            ===========  ================  ======================================
-
-        ac_kwargs (dict): Any kwargs appropriate for the actor_critic 
-            function you provided to SAC.
-
-        seed (int): Seed for random number generators.
-
-        steps_per_epoch (int): Number of steps of interaction (state-action pairs) 
-            for the agent and the environment in each epoch.
-
-        epochs (int): Number of epochs to run and train agent.
-
-        replay_size (int): Maximum length of replay buffer.
-
-        gamma (float): Discount factor. (Always between 0 and 1.)
-
-        polyak (float): Interpolation factor in polyak averaging for target 
-            networks. Target networks are updated towards main networks 
-            according to:
-
-            .. math:: \\theta_{\\text{targ}} \\leftarrow 
-                \\rho \\theta_{\\text{targ}} + (1-\\rho) \\theta
-
-            where :math:`\\rho` is polyak. (Always between 0 and 1, usually 
-            close to 1.)
-
-        lr (float): Learning rate (used for both policy and value learning).
-
-        alpha (float): Entropy regularization coefficient. (Equivalent to 
-            inverse of reward scale in the original SAC paper.)
-
-        batch_size (int): Minibatch size for SGD.
-
-        start_steps (int): Number of steps for uniform-random action selection,
-            before running real policy. Helps exploration.
-
-        max_ep_len (int): Maximum length of trajectory / episode / rollout.
-
-        logger_kwargs (dict): Keyword args for EpochLogger.
-
-        save_freq (int): How often (in terms of gap between epochs) to save
-            the current policy and value function.
-
-    """
-
+    alpha = Alpha(alpha_start=alpha,schedule=alpha_schedule)
+    entropic_index = EntropicIndex(q_end=q,schedule=q_schedule)
+    
+    alpha_t = alpha()
+    q_t = entropic_index()
+    
     logger = EpochLogger(**logger_kwargs)
     logger.save_config(locals())
 
@@ -137,9 +102,12 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
 
     # Share information about action space with policy architecture
     ac_kwargs['action_space'] = env.action_space
+    ac_kwargs['pdf_type'] = pdf_type
+    ac_kwargs['log_type'] = log_type
 
     # Inputs to computation graph
     x_ph, a_ph, x2_ph, r_ph, d_ph = core.placeholders(obs_dim, act_dim, obs_dim, None, None)
+    alpha_ph = core.scale_holder()
     q_ph = core.entropic_index_holder()
     
     # Main outputs from computation graph
@@ -164,10 +132,10 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
 
     # Targets for Q and V regression
     q_backup = tf.stop_gradient(r_ph + gamma*(1-d_ph)*v_targ)
-    v_backup = tf.stop_gradient(min_q_pi - alpha * logp_pi)
+    v_backup = tf.stop_gradient(min_q_pi - alpha_ph * logp_pi)
 
     # Soft actor-critic losses
-    pi_loss = tf.reduce_mean(alpha * logp_pi - q1_pi)
+    pi_loss = tf.reduce_mean(alpha_ph * logp_pi - q1_pi)
     q1_loss = 0.5 * tf.reduce_mean((q_backup - q1)**2)
     q2_loss = 0.5 * tf.reduce_mean((q_backup - q2)**2)
     v_loss = 0.5 * tf.reduce_mean((v_backup - v)**2)
@@ -206,12 +174,12 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
     sess.run(target_init)
 
     # Setup model saving
-    logger.setup_tf_saver(sess, inputs={'x': x_ph, 'a': a_ph, 'q' : q_ph}, 
+    logger.setup_tf_saver(sess, inputs={'x': x_ph, 'a': a_ph, 'q' : q_ph, 'alpha' : alpha_ph}, 
                                 outputs={'mu': mu, 'pi': pi, 'q1': q1, 'q2': q2, 'v': v})
 
     def get_action(o, deterministic=False):
         act_op = mu if deterministic else pi
-        return sess.run(act_op, feed_dict={x_ph: o.reshape(1,-1), q_ph: q})
+        return sess.run(act_op, feed_dict={x_ph: o.reshape(1,-1), q_ph: q_t})
 
     def test_agent(n=10):
         global sess, mu, pi, q1, q2, q1_pi, q2_pi
@@ -265,6 +233,8 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
             This is a slight difference from the SAC specified in the
             original paper.
             """
+            alpha_t = alpha()
+            q_t = entropic_index()
             for j in range(ep_len):
                 batch = replay_buffer.sample_batch(batch_size)
                 feed_dict = {x_ph: batch['obs1'],
@@ -272,7 +242,8 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
                              a_ph: batch['acts'],
                              r_ph: batch['rews'],
                              d_ph: batch['done'],
-                             q_ph: q
+                             alpha_ph: alpha_t,
+                             q_ph: q_t
                             }
                 outs = sess.run(step_ops, feed_dict)
                 logger.store(LossPi=outs[0], LossQ1=outs[1], LossQ2=outs[2],
@@ -295,6 +266,8 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
+            logger.log_tabular('EntIndex', q_t)
+            logger.log_tabular('EntCoeff', alpha_t)
             logger.log_tabular('EpRet', with_min_and_max=True)
             logger.log_tabular('TestEpRet', with_min_and_max=True)
             logger.log_tabular('EpLen', average_only=True)
@@ -304,7 +277,6 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
             logger.log_tabular('Q2Vals', with_min_and_max=True) 
             logger.log_tabular('VVals', with_min_and_max=True) 
             logger.log_tabular('LogPi', with_min_and_max=True)
-            logger.log_tabular('LossPi', average_only=True)
             logger.log_tabular('LossQ1', average_only=True)
             logger.log_tabular('LossQ2', average_only=True)
             logger.log_tabular('LossV', average_only=True)
@@ -321,15 +293,19 @@ if __name__ == '__main__':
     parser.add_argument('--seed', '-s', type=int, default=0)
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--exp_name', type=str, default='tac')
-    parser.add_argument('--q', type=float, default=1.0)
     parser.add_argument('--alpha', type=float, default=0.2)
+    parser.add_argument('--alpha_schedule', type=str, default='constant')
+    parser.add_argument('--q', type=float, default=1.0)
+    parser.add_argument('--q_schedule', type=str, default='constant')
+    parser.add_argument('--pdf_type', type=str, default='gaussian')
+    parser.add_argument('--log_type', type=str, default='q-log')
     args = parser.parse_args()
-
+    
     from spinup.utils.run_utils import setup_logger_kwargs
     logger_kwargs = setup_logger_kwargs(args.exp_name, args.seed)
-
     tac(lambda : gym.make(args.env), actor_critic=core.mlp_actor_critic,
         ac_kwargs=dict(hidden_sizes=[args.hid]*args.l),
-        alpha=args.alpha,q=args.q,
+        alpha=args.alpha, alpha_schedule=args.alpha_schedule, q=args.q, q_schedule=args.q_schedule,
+        pdf_type=args.pdf_type,log_type=args.log_type,
         gamma=args.gamma, seed=args.seed, epochs=args.epochs,
         logger_kwargs=logger_kwargs)

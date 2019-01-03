@@ -20,12 +20,18 @@ def np_log_q(x,q=1):
         return log_q_x
 
 def tf_exp_q(x,q):
-    exp_q_x = tf.cond(tf.equal(q,1.),true_fn=lambda: tf.exp(x),false_fn=lambda: tf.pow(tf.maximum(1+(q-1)*x,0),1/(q-1)))
+    logit = 1+(1-q)*x
+    clip_low = tf.cast(logit < 0, tf.float32)
+    safe_x =  logit + tf.stop_gradient(-logit)*clip_low
+    
+    exp_q_x = tf.cond(tf.equal(q,1.),true_fn=lambda: tf.exp(x),false_fn=lambda: tf.pow(safe_x,1/(1-q)))
     return exp_q_x
     
 def tf_log_q(x,q):
-    safe_x = tf.maximum(x,1e-8)
-    log_q_x = tf.cond(tf.equal(q,1.),true_fn=lambda: tf.log(safe_x),false_fn=lambda: (tf.pow(safe_x,q-1)-1)/(q-1))
+    clip_low = tf.cast(x < 1e-8, tf.float32)
+    safe_x = x + tf.stop_gradient(1e-8-x)*clip_low
+    
+    log_q_x = tf.cond(tf.equal(q,1.),true_fn=lambda: tf.log(safe_x),false_fn=lambda: (tf.pow(safe_x,1-q)-1)/(1-q))
     return log_q_x
 
 def tf_tsallis_entropy(p,q):
@@ -40,8 +46,7 @@ def tf_tsallis_divergence(p1,p2,q):
 def tf_tsallis_distance(p1,p2,q):
     return tf_tsallis_entropy((p1+p2)/2,q) - (tf_tsallis_entropy(p1,q)+tf_tsallis_entropy(p2,q))/2
 
-def tf_random_q_normal(shape,q_prime):
-    q = 2.- q_prime
+def tf_random_q_normal(shape,q):
     dim = tf.cast(shape,tf.float32)[1]
     
     z = tf.random_normal(shape)
@@ -54,14 +59,8 @@ def tf_random_q_normal(shape,q_prime):
     x = tf.cond(tf.equal(q,1.0),true_fn=lambda: z,false_fn=lambda: tf.sqrt((dim+2-dim*q)/(1-q))*z/tf.sqrt(a+z_square))
     return x
 
-#def tf_q_gaussian_likelihood(x, mu, log_std, q_prime):
-#    q = 2.- q_prime
-#    std = tf.exp(log_std)+1e-8
-#    return -tf.reduce_sum(tf.square((x-mu)/std),axis=1)/((dim+4.)-(dim+2.)*q) - 
-    
-def tf_q_gaussian_distribution(x, mu, log_std, q_prime):
-    q = 2.- q_prime
-    std = tf.exp(log_std)+1e-6
+def tf_q_gaussian_distribution(x, mu, log_std, q):
+    std = tf.exp(log_std)+1e-8
     dim = tf.cast(tf.shape(x),tf.float32)[1]
     gamma1 = tf.exp(tf.lgamma((2.-q)/(1.-q)))
     gamma2 = tf.exp(tf.lgamma((2.-q)/(1.-q)+dim/2.))
@@ -70,7 +69,7 @@ def tf_q_gaussian_distribution(x, mu, log_std, q_prime):
                   false_fn=lambda: tf.pow(tf.sqrt(((dim+4.)-(dim+2.)*q)/(1.-q)*tf.constant(np.pi,dtype=tf.float32)),dim)*gamma1/gamma2
                  )
 
-    return tf_exp_q(-tf.reduce_sum(tf.square((x-mu)/std),axis=1)/((dim+4.)-(dim+2.)*q),q=2.-q)/K_q/tf.reduce_prod(std,axis=1)
+    return tf_exp_q(-tf.reduce_sum(tf.square((x-mu)/std),axis=1)/((dim+4.)-(dim+2.)*q),q=q)/K_q/tf.reduce_prod(std,axis=1)
 
 # Sampling q Gaussian using Box Muller Transform
 #def tf_random_q_normal(shape,q):
