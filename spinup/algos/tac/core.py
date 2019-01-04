@@ -29,7 +29,7 @@ def count_vars(scope):
     return sum([np.prod(var.shape.as_list()) for var in v])
 
 def gaussian_likelihood(x, mu, log_std):
-    pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 - 2*log_std - np.log(2*np.pi))
+    pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 + 2*log_std + np.log(2*np.pi))
     return tf.reduce_sum(pre_sum, axis=1)
 
 def clip_but_pass_gradient(x, l=-1., u=1.):
