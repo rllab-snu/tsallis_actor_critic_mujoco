@@ -276,9 +276,14 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
                 logger.store(LossPi=outs[0], LossQ1=outs[1], LossQ2=outs[2],
                              LossV=outs[3], Q1Vals=outs[4], Q2Vals=outs[5],
                              VVals=outs[6], LogPi=outs[7])
+                
+                if np.isnan(outs[0]) or np.isnan(outs[7]).any():
+                    print(outs)
+                    return
+                
             logger.store(EpRet=ep_ret, EpLen=ep_len)
             o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
-
+            
         # End of epoch wrap-up
         if t > 0 and t % steps_per_epoch == 0:
             epoch = t // steps_per_epoch
