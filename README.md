@@ -29,7 +29,7 @@ Results will be saved in _data_ folder
 - [entropic_index] indicates _q_
 - [q_schedule] is _q_schedule_. Use cst for constant and sch for scheduling
 - [distribution] indicates _pdf\_type_ which has two options: Gaussian and $q$-Gaussian.
-- [entropy_type] indicates _log\_type_ which has two options: $$\log$$ and $q-\log$
+- [entropy_type] indicates _log\_type_ which has two options: \$\log\$ and $q-\log$
 
 ## Run multiple experiments
 ```sh
