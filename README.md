@@ -1,4 +1,18 @@
 # Tsallis Actor Critic
+## Installaction
+### Prerequisite
+```sh
+sudo apt-get update && sudo apt-get install libopenmpi-dev
+```
+### Install MuJoCo
+pip install gym[mujoco,robotics]
+
+### Install Tsallis Actor Critic
+```sh
+cd tsallis_actor_critic_mujoco
+pip install -e .
+```
+
 ## Run single experiment
 ```sh
 cd tsallis_actor_critic_mujoco
