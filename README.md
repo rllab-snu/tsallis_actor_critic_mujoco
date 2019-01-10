@@ -1,1 +1,2 @@
-# tsallis_actor_critic_mujoco
+# Tsallis Actor Critic
+# 
