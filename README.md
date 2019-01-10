@@ -4,9 +4,10 @@
 ```sh
 sudo apt-get update && sudo apt-get install libopenmpi-dev
 ```
-### Install MuJoCo
+### Install MuJoCo (Recommend)
+```sh
 pip install gym[mujoco,robotics]
-
+```
 ### Install Tsallis Actor Critic
 ```sh
 cd tsallis_actor_critic_mujoco
@@ -20,7 +21,7 @@ python -m spinup.run tac --env HalfCheetah-v2 --exp_name half_tac_alpha_cst_q_1.
 ```
 Results will be saved in _data_ folder
 
-### Experiment naming convention (Recommendation)
+### Experiment naming convention (Recommend)
 [env]\_[algorithm]\_alpha\_[alpha_schedule]\_q\_[entropic_index]\_[q_schedule]\_[distribution]\_[entropy_type]
 - [env]: Environment name, ex) half
 - [algorithm]: Algorithm name, ex) tac
