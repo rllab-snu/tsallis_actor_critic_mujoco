@@ -59,29 +59,29 @@ def mlp_q_gaussian_policy(x, a, q_prime, hidden_sizes, activation, output_activa
         pi = mu + tf.random_normal(tf.shape(mu)) * std
         squashed_mu = tf.tanh(mu)
         squashed_pi = tf.tanh(pi)
-        logp_pi = gaussian_likelihood(pi, mu, log_std) - tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=1e-3, u=1) + 1e-6), axis=1)
+        logp_pi = gaussian_likelihood(pi, mu, log_std) - tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=1e-5, u=1)), axis=1)
         q_logp_pi = tf_log_q(tf.exp(logp_pi-tf.reduce_max(logp_pi)),q)
         
     if pdf_type=="gaussian" and log_type=="scaled-q-log":
         pi = mu + tf.random_normal(tf.shape(mu)) * std
         squashed_mu = tf.tanh(mu)
         squashed_pi = tf.tanh(pi)
-        logp_pi = gaussian_likelihood(pi, mu, log_std) - tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=1-3, u=1) + 1e-6), axis=1)
-        q_logp_pi = tf_log_q(tf.exp(logp_pi),q)/-tf_log_q(tf.reduce_prod(1/2.0*tf.ones_like(mu),axis=1),q)
+        logp_pi = gaussian_likelihood(pi, mu, log_std) - tf.reduce_sum(tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=1e-5, u=1)), axis=1)
+        q_logp_pi = tf_log_q(tf.exp(logp_pi),q)*tf.log(tf.reduce_prod(1/2.0*tf.ones_like(mu),axis=1))/tf_log_q(tf.reduce_prod(1/2.0*tf.ones_like(mu),axis=1),q)
         
     elif pdf_type=="q-gaussian" and log_type=="q-log":
         pi = mu + tf_random_q_normal(tf.shape(mu),q) * std
         squashed_mu = tf.tanh(mu)
         squashed_pi = tf.tanh(pi)
-        p_pi = tf_q_gaussian_distribution(pi, mu, log_std, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=1-3, u=1) + 1e-6, axis=1)
+        p_pi = tf_q_gaussian_distribution(pi, mu, log_std, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=1e-5, u=1), axis=1)
         q_logp_pi = tf_log_q(p_pi,q)
     
     elif pdf_type=="q-gaussian" and log_type=="scaled-q-log":
         pi = mu + tf_random_q_normal(tf.shape(mu),q) * std
         squashed_mu = tf.tanh(mu)
         squashed_pi = tf.tanh(pi)
-        p_pi = tf_q_gaussian_distribution(pi, mu, log_std, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=1-3, u=1) + 1e-6, axis=1)
-        q_logp_pi = tf_log_q(p_pi,q)/-tf_log_q(tf.reduce_prod(1/2.0*tf.ones_like(mu),axis=1),q)
+        p_pi = tf_q_gaussian_distribution(pi, mu, log_std, q)/tf.reduce_prod(clip_but_pass_gradient(1 - squashed_pi**2, l=1e-5, u=1), axis=1)
+        q_logp_pi = tf_log_q(p_pi,q)*tf.log(tf.reduce_prod(1/2.0*tf.ones_like(mu),axis=1))/tf_log_q(tf.reduce_prod(1/2.0*tf.ones_like(mu),axis=1),q)
         
     elif pdf_type=="gaussian" and log_type=="log":
         pi = mu + tf.random_normal(tf.shape(mu)) * std
