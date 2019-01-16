@@ -29,8 +29,8 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
 
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
-    sns.set(style="darkgrid", font_scale=1.8)
-    sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', **kwargs)
+    sns.set(style="darkgrid", font_scale=2.0)
+    sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', legend=False, **kwargs)
     """
     If you upgrade to any version of Seaborn greater than 0.8.1, switch from 
     tsplot to lineplot replacing L29 with:
@@ -39,7 +39,7 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
 
     Changes the colorscheme and the default legend style, though.
     """
-    plt.legend(loc='best')
+    #plt.legend(loc='best')
     #plt.legend(loc='upper center', bbox_to_anchor=(1.2,0.8), prop={'size':20})
 
     """
@@ -52,8 +52,8 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
     xscale = np.max(np.asarray(data[xaxis])) > 5e3
     if xscale:
         # Just some formatting niceness: x-axis scale in scientific notation if max x is large
-        plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-    plt.ticklabel_format(style='sci', axis='y',scilimits=(0,0))
+        plt.ticklabel_format(style='sci', axis='both', scilimits=(0,0))
+
     plt.tight_layout(pad=0.5)
 
 def get_datasets(logdir, condition=None):
@@ -152,13 +152,14 @@ def make_plots(all_logdirs, figname=None, legend=None, xaxis=None, values=None, 
     condition = 'Condition2' if count else 'Condition1'
     estimator = getattr(np, estimator)      # choose what to show on main curve: mean? max? min?
     for value in values:
+        #plt.figure(figsize=(5,5))
         plt.figure()
         plot_data(data, xaxis=xaxis, value=value, condition=condition, smooth=smooth, estimator=estimator)
     
-    if legend is None:
-        plt.legend().set_visible(False)
+    if legend is not None:
+        plt.legend(loc='best')
     
-    plt.savefig(figname+'.png')
+    plt.savefig(figname+'.png',dpi=100)
 
 def main():
     import argparse
