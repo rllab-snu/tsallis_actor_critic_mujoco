@@ -12,7 +12,7 @@ DIV_LINE_WIDTH = 50
 exp_idx = 0
 units = dict()
 
-def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1", smooth=1, **kwargs):
+def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1", smooth=1, legend=False, **kwargs):
     if smooth > 1:
         """
         smooth data with moving window average.
@@ -30,7 +30,7 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
     sns.set(style="darkgrid", font_scale=2.0)
-    sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', legend=False, **kwargs)
+    sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', legend=legend, **kwargs)
     """
     If you upgrade to any version of Seaborn greater than 0.8.1, switch from 
     tsplot to lineplot replacing L29 with:
@@ -154,10 +154,14 @@ def make_plots(all_logdirs, figname=None, legend=None, xaxis=None, values=None, 
     for value in values:
         #plt.figure(figsize=(5,5))
         plt.figure()
-        plot_data(data, xaxis=xaxis, value=value, condition=condition, smooth=smooth, estimator=estimator)
+        legend_flage=False
+        if legend is not None:
+            legend_flag = True
+
+        plot_data(data, xaxis=xaxis, value=value, condition=condition, smooth=smooth, estimator=estimator, legend=legend_flag)
     
-    if legend is not None:
-        plt.legend(loc='best')
+        if legend is not None:
+            plt.legend(loc='best')
     
     plt.savefig(figname+'.png',dpi=100)
 
