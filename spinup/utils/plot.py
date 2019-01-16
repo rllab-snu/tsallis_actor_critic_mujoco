@@ -29,7 +29,7 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
 
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
-    sns.set(style="darkgrid", font_scale=1.5)
+    sns.set(style="darkgrid", font_scale=1.8)
     sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', **kwargs)
     """
     If you upgrade to any version of Seaborn greater than 0.8.1, switch from 
@@ -39,21 +39,21 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
 
     Changes the colorscheme and the default legend style, though.
     """
-    plt.legend(loc='best').draggable()
+    plt.legend(loc='best')
+    #plt.legend(loc='upper center', bbox_to_anchor=(1.2,0.8), prop={'size':20})
 
     """
     For the version of the legend used in the Spinning Up benchmarking page, 
     swap L38 with:
-
-    plt.legend(loc='upper center', ncol=6, handlelength=1,
-               mode="expand", borderaxespad=0., prop={'size': 13})
     """
+    #plt.legend(loc='upper center', ncol=6, handlelength=1,
+    #           mode="expand", borderaxespad=0., prop={'size': 13})
 
     xscale = np.max(np.asarray(data[xaxis])) > 5e3
     if xscale:
         # Just some formatting niceness: x-axis scale in scientific notation if max x is large
         plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-
+    plt.ticklabel_format(style='sci', axis='y',scilimits=(0,0))
     plt.tight_layout(pad=0.5)
 
 def get_datasets(logdir, condition=None):
@@ -131,8 +131,8 @@ def get_all_datasets(all_logdirs, legend=None, select=None, exclude=None):
     print('\n' + '='*DIV_LINE_WIDTH)
 
     # Make sure the legend is compatible with the logdirs
-    assert not(legend) or (len(legend) == len(logdirs)), \
-        "Must give a legend title for each set of experiments."
+    #assert not(legend) or (len(legend) == len(logdirs)), \
+    #    "Must give a legend title for each set of experiments."
 
     # Load data from logdirs
     data = []
@@ -145,7 +145,7 @@ def get_all_datasets(all_logdirs, legend=None, select=None, exclude=None):
     return data
 
 
-def make_plots(all_logdirs, legend=None, xaxis=None, values=None, count=False,  
+def make_plots(all_logdirs, figname=None, legend=None, xaxis=None, values=None, count=False,  
                font_scale=1.5, smooth=1, select=None, exclude=None, estimator='mean'):
     data = get_all_datasets(all_logdirs, legend, select, exclude)
     values = values if isinstance(values, list) else [values]
@@ -154,9 +154,11 @@ def make_plots(all_logdirs, legend=None, xaxis=None, values=None, count=False,
     for value in values:
         plt.figure()
         plot_data(data, xaxis=xaxis, value=value, condition=condition, smooth=smooth, estimator=estimator)
-    #plt.show()
     
-    plt.savefig(legend[0]+'.png')
+    if legend is None:
+        plt.legend().set_visible(False)
+    
+    plt.savefig(figname+'.png')
 
 def main():
     import argparse
@@ -170,6 +172,7 @@ def main():
     parser.add_argument('--select', nargs='*')
     parser.add_argument('--exclude', nargs='*')
     parser.add_argument('--est', default='mean')
+    parser.add_argument('--figname', default='test')
     args = parser.parse_args()
     """
 
@@ -220,7 +223,7 @@ def main():
 
     """
 
-    make_plots(args.logdir, args.legend, args.xaxis, args.value, args.count, 
+    make_plots(args.logdir, args.figname, args.legend, args.xaxis, args.value, args.count, 
                smooth=args.smooth, select=args.select, exclude=args.exclude,
                estimator=args.est)
 
