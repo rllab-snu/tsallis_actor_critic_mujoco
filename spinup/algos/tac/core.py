@@ -60,7 +60,7 @@ def mlp_q_gaussian_policy(x, a, q_prime, hidden_sizes, activation, output_activa
         squashed_mu = tf.tanh(mu)
         squashed_pi = tf.tanh(pi)
         logp_pi = -0.5 * (((pi-mu)/(tf.exp(log_std)+EPS))**2 + 2*log_std + np.log(2*np.pi)) - tf.log(clip_but_pass_gradient(1 - squashed_pi**2, l=0, u=1)+1e-6)
-        q_logp_pi = tf.reduce_sum(tf.maximum(tf_log_q(tf.exp(logp_pi),q),1e7), axis=1)
+        q_logp_pi = tf.reduce_sum(tf_log_q(tf.maximum(tf.exp(logp_pi),tf.pow(10.,8/(1-q))),q), axis=1)
         
     if pdf_type=="gaussian" and log_type=="scaled-q-log":
         pi = mu + tf.random_normal(tf.shape(mu)) * std
