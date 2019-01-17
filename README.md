@@ -26,6 +26,17 @@ If you want to add a customized environment, see https://github.com/openai/gym/t
 ```sh
 cd tsallis_actor_critic_mujoco
 cd spinup/algos/tac
+ls
+```
+The following files will be shown
+```
+tac
+│   core.py
+│   tac.py
+│   file001.txt    
+│   file001.txt    
+│   file001.txt    
+│   file001.txt    
 ```
 
 ## Run single experiment
