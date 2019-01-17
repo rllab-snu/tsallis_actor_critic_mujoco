@@ -30,7 +30,9 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
     sns.set(style="darkgrid", font_scale=2.0)
-    sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', legend=legend, **kwargs)
+    #sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', legend=legend, **kwargs)
+    sns.lineplot(data=data, x=xaxis, y=value, ci='sd', hue=condition, legend='brief', **kwargs)
+    #plt.plot(data[xaxis],data[value])
     """
     If you upgrade to any version of Seaborn greater than 0.8.1, switch from 
     tsplot to lineplot replacing L29 with:
@@ -48,7 +50,7 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
     """
     #plt.legend(loc='upper center', ncol=6, handlelength=1,
     #           mode="expand", borderaxespad=0., prop={'size': 13})
-
+    #print(np.isnan(data[value]).any())
     xscale = np.max(np.asarray(data[xaxis])) > 5e3
     if xscale:
         # Just some formatting niceness: x-axis scale in scientific notation if max x is large
@@ -154,7 +156,7 @@ def make_plots(all_logdirs, figname=None, legend=None, xaxis=None, values=None, 
     for value in values:
         #plt.figure(figsize=(5,5))
         plt.figure()
-        legend_flage=False
+        legend_flag=False
         if legend is not None:
             legend_flag = True
 
@@ -162,6 +164,9 @@ def make_plots(all_logdirs, figname=None, legend=None, xaxis=None, values=None, 
     
         if legend is not None:
             plt.legend(loc='best')
+            ax = plt.gca()
+            handles, labels = ax.get_legend_handles_labels()
+            ax.legend(handles=handles[1:], labels=labels[1:])
     
     plt.savefig(figname+'.png',dpi=100)
 
