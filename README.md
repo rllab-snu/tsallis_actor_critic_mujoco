@@ -1,4 +1,5 @@
 # Tsallis Actor Critic
+This repository provides the implementation of Tsallis actor critic method based on Spinningup packages which is educational resource produced by OpenAI. We implemented TAC based on Spinningup packages https://github.com/openai/spinningup.
 ## Installaction
 ### Prerequisite
 ```sh
