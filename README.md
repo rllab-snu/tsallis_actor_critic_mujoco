@@ -21,6 +21,13 @@ pip install -e .
 
 If you want to add a customized environment, see https://github.com/openai/gym/tree/master/gym/envs#how-to-create-new-environments-for-gym
 
+## Jupyter Notebook Examples for Tsallis Entropy and Dynamic Programming
+
+```sh
+cd tsallis_actor_critic_mujoco
+cd spinup/algos/tac
+```
+
 ## Run single experiment
 ```sh
 cd tsallis_actor_critic_mujoco
