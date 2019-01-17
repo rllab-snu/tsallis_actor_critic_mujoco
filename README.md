@@ -8,11 +8,18 @@ sudo apt-get update && sudo apt-get install libopenmpi-dev
 ```sh
 pip install gym[mujoco,robotics]
 ```
-### Install Tsallis Actor Critic
+### Install Spinningup with Tsallis Actor Critic
 ```sh
 cd tsallis_actor_critic_mujoco
 pip install -e .
 ```
+### Install Custom Gym
+```sh
+cd tsallis_actor_critic_mujodo/custom_gym/
+pip install -e .
+```
+
+If you want to add a customized environment, see https://github.com/openai/gym/tree/master/gym/envs#how-to-create-new-environments-for-gym
 
 ## Run single experiment
 ```sh
