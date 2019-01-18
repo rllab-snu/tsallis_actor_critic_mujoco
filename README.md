@@ -1,4 +1,5 @@
 # Tsallis Actor Critic
+This repository provides the implementation of Tsallis actor critic method based on Spinningup packages which is educational resource produced by OpenAI. We implemented TAC based on Spinningup packages https://github.com/openai/spinningup.
 ## Installaction
 ### Prerequisite
 ```sh
@@ -8,10 +9,35 @@ sudo apt-get update && sudo apt-get install libopenmpi-dev
 ```sh
 pip install gym[mujoco,robotics]
 ```
-### Install Tsallis Actor Critic
+### Install Spinningup with Tsallis Actor Critic
 ```sh
 cd tsallis_actor_critic_mujoco
 pip install -e .
+```
+### Install Custom Gym
+```sh
+cd tsallis_actor_critic_mujodo/custom_gym/
+pip install -e .
+```
+
+If you want to add a customized environment, see https://github.com/openai/gym/tree/master/gym/envs#how-to-create-new-environments-for-gym
+
+## Jupyter Notebook Examples for Tsallis Entropy and Dynamic Programming
+
+```sh
+cd tsallis_actor_critic_mujoco
+cd spinup/algos/tac
+ls
+```
+The following files will be shown
+```
+tac
+│   core.py
+│   tac.py
+│   file001.txt    
+│   file001.txt    
+│   file001.txt    
+│   file001.txt    
 ```
 
 ## Run single experiment
