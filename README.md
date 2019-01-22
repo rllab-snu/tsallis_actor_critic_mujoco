@@ -1,5 +1,5 @@
 # Tsallis Actor Critic
-This repository provides the implementation of Tsallis actor critic method based on Spinningup packages which is educational resource produced by OpenAI. We implemented TAC based on Spinningup packages https://github.com/openai/spinningup.
+This repository provides the implementation of Tsallis actor critic (TAC) method based on Spinningup packages which is educational resource produced by OpenAI. We implemented TAC based on Spinningup packages https://github.com/openai/spinningup. TAC generalizes the standard Shannon-Gibbs entropy maximization in RL to the Tsallis entropy (https://en.wikipedia.org/wiki/Tsallis_entropy).
 ## Installaction
 ### Prerequisite
 ```sh
@@ -19,11 +19,9 @@ pip install -e .
 cd tsallis_actor_critic_mujodo/custom_gym/
 pip install -e .
 ```
-
 If you want to add a customized environment, see https://github.com/openai/gym/tree/master/gym/envs#how-to-create-new-environments-for-gym
 
 ## Jupyter Notebook Examples for Tsallis Entropy and Dynamic Programming
-
 ```sh
 cd tsallis_actor_critic_mujoco
 cd spinup/algos/tac
