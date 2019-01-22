@@ -164,10 +164,10 @@ def make_plots(all_logdirs, figname=None, legend=None, xaxis=None, values=None, 
         plot_data(data, xaxis=xaxis, value=value, condition=condition, smooth=smooth, estimator=estimator, legend=legend_flag)
     
         if legend is not None:
-            plt.legend(loc='best',fontsize=13)
+            plt.legend(loc='best')
             ax = plt.gca()
             handles, labels = ax.get_legend_handles_labels()
-            ax.legend(handles=handles[1:], labels=labels[1:],fontsize=15)
+            ax.legend(handles=handles[1:], labels=labels[1:],fontsize=18)
  
     plt.savefig(figname+'.png',dpi=100)
 
