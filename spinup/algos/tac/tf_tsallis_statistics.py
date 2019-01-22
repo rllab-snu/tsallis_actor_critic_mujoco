@@ -21,17 +21,13 @@ def np_log_q(x,q=1):
 
 def tf_exp_q(x,q):
     logit = 1+(1-q)*x
-    #clip_low = tf.cast(logit < 0, tf.float32)
-    #safe_x = logit + tf.stop_gradient(-logit)*clip_low
     safe_x = tf.maximum(logit,0)
 
     exp_q_x = tf.cond(tf.equal(q,1.),true_fn=lambda: tf.exp(x),false_fn=lambda: tf.pow(safe_x,1/(1-q)))
     return exp_q_x
     
 def tf_log_q(x,q):
-    #clip_low = tf.cast(x < 1e-8, tf.float32)
-    #safe_x = x + tf.stop_gradient(1e-8-x)*clip_low
-    safe_x = tf.maximum(x,1e-8)
+    safe_x = tf.maximum(x,1e-6)
 
     log_q_x = tf.cond(tf.equal(q,1.),true_fn=lambda: tf.log(safe_x),false_fn=lambda: (tf.pow(safe_x,1-q)-1)/(1-q))
     return log_q_x

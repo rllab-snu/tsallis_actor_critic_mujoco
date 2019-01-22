@@ -6,26 +6,6 @@ from spinup.algos.tac import core
 from spinup.algos.tac.core import get_vars
 from spinup.utils.logx import EpochLogger
 
-class Weight:
-    def __init__(self, weight_start=1.0, weight_end=0.0, max_iter=200, schedule='constant'):
-        self.weight_start = weight_start
-        self.weight_end = weight_end
-        self.schedule = schedule
-        self.max_iter = max_iter
-        self.count = 0
-        
-    def __call__(self, ret=None):
-        if self.schedule == 'constant':
-            return self.weight_start
-        elif self.schedule == 'linear':
-            self.count += 1
-            if self.count <= self.max_iter*0.2:
-                return self.weight_start
-            elif self.count >= self.max_iter*0.8:                
-                return self.weight_end
-            else:
-                return self.weight_end-(self.count/self.max_iter-0.8)*(self.weight_start-self.weight_end)/0.6
-
 class Alpha:
     def __init__(self, alpha_start=0.2, alpha_end=1e-2, max_iter=200, speed=0.1, schedule='constant'):
         self.alpha_start = alpha_start
@@ -38,18 +18,6 @@ class Alpha:
     def __call__(self, ret=None):
         if self.schedule == 'constant':
             return self.alpha_start
-        elif self.schedule == 'logarithm':
-            self.count += 1
-            if self.count <= self.max_iter*0.2:
-                return self.alpha_start
-            else:
-                return np.maximum(
-                    self.alpha_end, 
-                    np.minimum(
-                        self.alpha_start,
-                        self.alpha_start/np.maximum(np.log(self.speed*(self.count-0.2*self.max_iter)+1e-3),1)
-                    )
-                )
 
 class EntropicIndex:
     def __init__(self, q_start=1.0, q_end=2.0, max_iter=200, schedule='constant'):
@@ -62,18 +30,10 @@ class EntropicIndex:
     def __call__(self, ret=None):
         if self.schedule == 'constant':
             return self.q_end
-        elif self.schedule == 'linear':
-            self.count += 1
-            if self.count <= self.max_iter*0.2:
-                return self.q_start
-            elif self.count >= self.max_iter*0.8:                
-                return self.q_end
-            else:
-                return self.q_end-(self.count/self.max_iter-0.8)*(self.q_start-self.q_end)/0.6
-            
+
 class ReplayBuffer:
     """
-    A simple FIFO experience replay buffer for SAC agents.
+    A simple FIFO experience replay buffer for TAC agents.
     """
 
     def __init__(self, obs_dim, act_dim, size):
@@ -136,7 +96,9 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
 
     # Inputs to computation graph
     x_ph, a_ph, x2_ph, r_ph, d_ph = core.placeholders(obs_dim, act_dim, obs_dim, None, None)
+    # Coefficient for Tsallis entropy
     alpha_ph = core.scale_holder()
+    # Place holder for entropic index
     q_ph = core.entropic_index_holder()
     
     # Main outputs from computation graph
@@ -257,11 +219,7 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
         o = o2
 
         if d or (ep_len == max_ep_len):
-            """
-            Perform all SAC updates at the end of the trajectory.
-            This is a slight difference from the SAC specified in the
-            original paper.
-            """
+
             for j in range(ep_len):
                 batch = replay_buffer.sample_batch(batch_size)
                 feed_dict = {x_ph: batch['obs1'],
