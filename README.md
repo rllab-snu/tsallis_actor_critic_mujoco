@@ -34,9 +34,11 @@ The following files will be shown
 tac
 │   core.py
 │   tac.py
-│   file001.txt    
-│   file001.txt      
+│   Example_Tsallis_MDPs.ipynb 
+│   Example_Tsallis_statistics.ipynb
 ```
+Example_Tsallis_MDPs.ipynb shows the figure of performance error bound.
+Example_Tsallis_statistics.ipynb shows the multi armed bandit with maximum Tsallis entropy examples.
 
 ## Run single experiment
 ```sh
