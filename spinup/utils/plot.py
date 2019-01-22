@@ -32,7 +32,7 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
         data = pd.concat(data, ignore_index=True)
     sns.set(style="darkgrid", font_scale=2.0)
     #sns.tsplot(data=data, time=xaxis, value=value, unit="Unit", condition=condition, ci='sd', legend=legend, **kwargs)
-    sns.lineplot(data=data, x=xaxis, y=value, ci='sd', hue=condition, style=condition, dashes=True, markers=False, legend=legend, **kwargs)
+    sns.lineplot(data=data, x=xaxis, y=value, ci='sd', hue=condition, style=condition, dashes=False, markers=["p","h","v","s","o","D","X","P","*"], ms=8, markevery=20, markeredgewidth=0.0, legend=legend, **kwargs)
     #plt.plot(data[xaxis],data[value])
     """
     If you upgrade to any version of Seaborn greater than 0.8.1, switch from 
@@ -167,7 +167,7 @@ def make_plots(all_logdirs, figname=None, legend=None, xaxis=None, values=None, 
             plt.legend(loc='best')
             ax = plt.gca()
             handles, labels = ax.get_legend_handles_labels()
-            ax.legend(handles=handles[1:], labels=labels[1:],fontsize=18)
+            ax.legend(handles=handles[1:], labels=labels[1:],fontsize=15, markerscale=1.5)
  
     plt.savefig(figname+'.png',dpi=100)
 
