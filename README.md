@@ -70,4 +70,6 @@ This convention will help you not forget a parameter setting.
 cd tsallis_actor_critic_mujoco
 ./shell_scripts/tsallis_half_cheetah.sh
 ```
+To run mulitple experiments at once, we employ a simple and easy way as follows:
 
+program1 & program2 & ... & programn
