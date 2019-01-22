@@ -32,6 +32,7 @@ The following files will be shown
 tac
 ├── core.py
 ├── tac.py
+├── tf_tsallis_statistics.py
 ├── Example_Tsallis_MDPs.ipynb 
 └── Example_Tsallis_statistics.ipynb
 ```
