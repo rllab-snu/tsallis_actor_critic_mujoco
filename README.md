@@ -35,9 +35,7 @@ tac
 │   core.py
 │   tac.py
 │   file001.txt    
-│   file001.txt    
-│   file001.txt    
-│   file001.txt    
+│   file001.txt      
 ```
 
 ## Run single experiment
