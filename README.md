@@ -38,13 +38,14 @@ tac
 - Example_Tsallis_MDPs.ipynb shows the figure of performance error bound.
 - Example_Tsallis_statistics.ipynb shows the multi armed bandit with maximum Tsallis entropy examples.
 
-## Run test
+## Reproducing experiments
+### Run test
 ```sh
 cd tsallis_actor_critic_mujoco
 python -m spinup.run tac --env HalfCheetah-v2
 ```
 
-## Run single experiment
+### Run single experiment
 ```sh
 cd tsallis_actor_critic_mujoco
 python -m spinup.run tac --env HalfCheetah-v2 --exp_name half_tac_alpha_cst_q_1.5_cst_gaussian_q_log  --epochs 200 --lr 1e-3 --q 1.5 --pdf_type gaussian --log_type q-log --alpha_schedule constant --q_schedule constant --seed 0 10 20 30 40 50 60 70 80 90
@@ -63,7 +64,7 @@ Results will be saved in _data_ folder
 
 This convention will help you not forget a parameter setting.
 
-## Run multiple experiments
+### Run multiple experiments
 ```sh
 cd tsallis_actor_critic_mujoco
 ./shell_scripts/tsallis_half_cheetah.sh
