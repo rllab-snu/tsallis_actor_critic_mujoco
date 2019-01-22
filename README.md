@@ -70,5 +70,6 @@ cd tsallis_actor_critic_mujoco
 ./shell_scripts/tsallis_half_cheetah.sh
 ```
 To run mulitple experiments at once, we employ a simple and easy way as follows:
-
-program1 & program2 & ... & programn
+```
+run program_1 & program_2 & ... & program_n
+```
