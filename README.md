@@ -5,6 +5,12 @@ This repository provides the implementation of Tsallis actor critic (TAC) method
 ```sh
 sudo apt-get update && sudo apt-get install libopenmpi-dev
 ```
+### Virtual Environment (Reconmmend)
+```sh
+virtualenv tacenv --python=python3.5 (--system-site-packages)
+```
+You can change "tacenv"
+If your machine already has tensorflow-gpu package, I reconmmend <mark>--system-site-packages</mark>.
 ### Install MuJoCo (Recommend)
 ```sh
 pip install gym[mujoco,robotics]
@@ -64,6 +70,10 @@ Results will be saved in _data_ folder
 - [entropy_type] indicates _log\_type_ which has two options: _log_ and _q-log_
 
 This convention will help you not forget a parameter setting.
+Usage of convention
+```sh
+python -m spinup.run tac --env HalfCheetah-v2 --exp_name [experiment_name]
+```
 
 ### Run multiple experiments
 ```sh
