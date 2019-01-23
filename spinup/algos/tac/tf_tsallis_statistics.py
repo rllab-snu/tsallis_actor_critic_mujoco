@@ -1,11 +1,12 @@
 import tensorflow as tf
 import numpy as np
+from scipy.optimize import minimize
 
 def np_exp_q(x,q=1):
     if q==1:
         return np.exp(x)
     else:
-        exp_q_x = np.zeros_like(x)
+        exp_q_x = np.full_like(x,np.inf)
         exp_q_x[1+(1-q)*x > 0] = np.power(1+(1-q)*x[1+(1-q)*x > 0],1/(1-q))
         return exp_q_x
 
@@ -18,6 +19,37 @@ def np_log_q(x,q=1):
         log_q_x = np.full_like(x,-np.inf)
         log_q_x[x>0] = (np.power(x[x>0],1-q)-1)/(1-q)
         return log_q_x
+    
+def np_max_single_q(q_logit, q=1.):
+    q_logit = np.reshape(q_logit,[-1,])
+    max_q_logit = np.max(q_logit)
+    safe_q_logit = q_logit - max_q_logit
+    if q==1.:
+        maxq = np.log(np.sum(np.exp(safe_q_logit))) + max_q_logit
+        pq = np.exp(safe_q_logit)
+        pq = pq/np.sum(pq)
+    else:
+        obj = lambda x: -np.sum(safe_q_logit*x) - 1/(1.-q)*(1.-np.sum(x**(2.-q)))
+        const = ({'type':'eq', 'fun':lambda x:np.sum(x)-1.})
+        bnds = [(0.,1.) for i in range(safe_q_logit.shape[0])]
+        res = minimize(obj, x0=np.ones_like(safe_q_logit)/safe_q_logit.shape[0], constraints=const, bounds=bnds)
+        maxq = -res.fun+max_q_logit
+        pq = res.x
+    return maxq, pq
+
+def np_max_q(q_logits,q=1):
+    maxq_list = []
+    pq_list = []
+    for q_logit in q_logits:
+        maxq, pq = np_max_single_q(q_logit,q=q)
+        pq_list.append(pq)
+        maxq_list.append(maxq)
+    return np.array(maxq_list), np.array(pq_list)
+    
+def np_q_entropy(p,q=1):
+    q_ent_val = -np.sum(p*np_log_q(p,q=q),axis=1)
+    q_ent_val[np.isnan(q_ent_val)] = 0
+    return q_ent_val
 
 def tf_exp_q(x,q):
     logit = 1+(1-q)*x
