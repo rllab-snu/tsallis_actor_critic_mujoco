@@ -1,5 +1,5 @@
 # Tsallis Actor Critic
-This repository provides the implementation of Tsallis actor critic (TAC) method based on Spinningup packages which is educational resource produced by OpenAI. We implemented TAC based on Spinningup packages https://github.com/openai/spinningup. TAC generalizes the standard Shannon-Gibbs entropy maximization in RL to the Tsallis entropy (https://en.wikipedia.org/wiki/Tsallis_entropy).
+This repository provides the implementation of Tsallis actor critic (TAC) method based on Spinningup packages which is educational resource produced by OpenAI (https://github.com/openai/spinningup). TAC generalizes the standard Shannon-Gibbs entropy maximization in RL to the Tsallis entropy (https://en.wikipedia.org/wiki/Tsallis_entropy).
 ## Installaction
 ### Prerequisite
 ```sh
