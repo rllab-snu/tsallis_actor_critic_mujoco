@@ -9,7 +9,7 @@ sudo apt-get update && sudo apt-get install libopenmpi-dev
 ```sh
 virtualenv tacenv --python=python3.5 (--system-site-packages)
 ```
-You can change "tacenv"
+You can change "tacenv".
 If your machine already has tensorflow-gpu package, I reconmmend the option **--system-site-packages** to use tensorflow-gpu.
 ### Install MuJoCo (Recommend)
 ```sh
