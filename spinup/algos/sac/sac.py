@@ -6,6 +6,8 @@ from spinup.algos.sac import core
 from spinup.algos.sac.core import get_vars
 from spinup.utils.logx import EpochLogger
 
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 
 class ReplayBuffer:
     """
@@ -36,6 +38,13 @@ class ReplayBuffer:
                     acts=self.acts_buf[idxs],
                     rews=self.rews_buf[idxs],
                     done=self.done_buf[idxs])
+
+def elbow(X):
+    Nc = range(1, 20)
+    kmeans = [KMeans(n_clusters=i) for i in Nc]
+    score = np.array([kmeans[i].fit(X).score(X) for i in range(len(kmeans))])
+    diff = [score[i] - (score[-1] - score[0]) * i / (len(Nc) - 1) - score[0] for i in range(len(Nc))]
+    return Nc[np.argmax(diff)]
 
 """
 
@@ -297,9 +306,12 @@ def sac(env_fn, actor_critic=core.mlp_actor_critic, ac_kwargs=dict(), seed=0,
 
             # Test the performance of the deterministic version of the agent.
             test_agent()
+            batch = replay_buffer.sample_batch(batch_size)
+            N_eff = elbow(batch['acts'])
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
+            logger.log_tabular('NEff', N_eff)
             logger.log_tabular('EpRet', with_min_and_max=True)
             logger.log_tabular('TestEpRet', with_min_and_max=True)
             logger.log_tabular('EpLen', average_only=True)
@@ -320,7 +332,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='HalfCheetah-v2')
-    parser.add_argument('--hid', type=int, default=300)
+    parser.add_argument('--hid', type=int, default=[400, 300])
     parser.add_argument('--l', type=int, default=1)
     parser.add_argument('--seed', '-s', type=int, default=0)
     parser.add_argument('--epochs', type=int, default=200)
