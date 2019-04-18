@@ -1,10 +1,16 @@
 # Tsallis Actor Critic
-This repository provides the implementation of Tsallis actor critic (TAC) method based on Spinningup packages which is educational resource produced by OpenAI. We implemented TAC based on Spinningup packages https://github.com/openai/spinningup. TAC generalizes the standard Shannon-Gibbs entropy maximization in RL to the Tsallis entropy (https://en.wikipedia.org/wiki/Tsallis_entropy).
+This repository provides the implementation of Tsallis actor critic (TAC) method based on [Spinningup](https://github.com/openai/spinningup) packages which is educational resource produced by OpenAI. TAC generalizes the standard Shannon-Gibbs entropy maximization in RL to the [Tsallis entropy](https://en.wikipedia.org/wiki/Tsallis_entropy). More detail theory and algorithm are explained in [Tsallis Reinforcement Learning: A Unified Framework for Maximum Entropy Reinforcement Learning](https://arxiv.org/abs/1902.00137)
 ## Installaction
 ### Prerequisite
 ```sh
 sudo apt-get update && sudo apt-get install libopenmpi-dev
 ```
+### Virtual Environment (Reconmmend)
+```sh
+virtualenv tacenv --python=python3.5 (--system-site-packages)
+```
+You can change "tacenv".
+If your machine already has tensorflow-gpu package, I reconmmend the option **--system-site-packages** to use tensorflow-gpu.
 ### Install MuJoCo (Recommend)
 ```sh
 pip install gym[mujoco,robotics]
@@ -28,7 +34,7 @@ cd spinup/algos/tac
 ls
 ```
 The following files will be shown
-```
+```sh
 tac
 ├── core.py
 ├── tac.py
@@ -64,6 +70,10 @@ Results will be saved in _data_ folder
 - [entropy_type] indicates _log\_type_ which has two options: _log_ and _q-log_
 
 This convention will help you not forget a parameter setting.
+Usage of convention
+```sh
+python -m spinup.run tac --env HalfCheetah-v2 --exp_name [experiment_name]
+```
 
 ### Run multiple experiments
 ```sh
@@ -71,6 +81,6 @@ cd tsallis_actor_critic_mujoco
 ./shell_scripts/tsallis_half_cheetah.sh
 ```
 To run mulitple experiments at once, we employ a simple and easy way as follows:
-```
+```sh
 run program_1 & program_2 & ... & program_n
 ```
