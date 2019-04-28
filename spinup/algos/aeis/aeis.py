@@ -14,15 +14,15 @@ def find_q_opt(K):
         return ((2*x-1)/x/(1-x) + np.log(K)/(1-K**(1-x)))**2
     q_opt = scipy.optimize.fsolve(loss, 0.5)
     q_opt = q_opt[0]
-    alpha = 5e-2*np.sqrt((1-q_opt)*K**(q_opt)/q_opt/(K**(1.-q_opt)-1.))
+    alpha = 1e-1*np.sqrt((1-q_opt)*K**(q_opt)/q_opt/(K**(1.-q_opt)-1.))
     return q_opt, alpha
 
 def elbow(X):
-    Nc = range(1, 20)
+    Nc = range(2, 20)
     kmeans = [KMeans(n_clusters=i) for i in Nc]
     score = np.array([kmeans[i].fit(X).score(X) for i in range(len(kmeans))])
     diff = [score[i] - (score[-1] - score[0]) * i / (len(Nc) - 1) - score[0] for i in range(len(Nc))]
-    return Nc[np.argmax(diff)]
+    return Nc[np.argmax(diff)] - 1
 
 class ReplayBuffer:
     """
