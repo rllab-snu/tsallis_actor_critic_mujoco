@@ -25,11 +25,21 @@ class EntropicIndex:
         self.q_end = q_end
         self.schedule = schedule
         self.max_iter = max_iter
-        self.count = 0
+        self.count = 0	
+	
+        if schedule == 'linear':
+            start_value = q_start
+            start_epoch = 0.1
+            end_value = q_end
+            end_epoch = 0.9
+            epochs = max_iter
+            self.schedule_fn = lambda x:np.minimum(np.maximum((x/epochs -  start_epoch)* (start_value-end_value)/(start_epoch-end_epoch) + start_value, start_value), end_value)
         
-    def __call__(self, ret=None):
+    def __call__(self, epoch=0, ret=None):
         if self.schedule == 'constant':
             return self.q_end
+        elif self.schedule == 'linear':
+            return self.schedule_fn(epoch)
 
 class ReplayBuffer:
     """
@@ -274,13 +284,13 @@ def tac(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
             
             # Update alpha and q value
             alpha_t = alpha()
-            q_t = entropic_index()
+            q_t = entropic_index(epoch=epoch)
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='HalfCheetah-v2')
-    parser.add_argument('--hid', type=int, default=300)
+    parser.add_argument('--hid', type=int, default=[400,300])
     parser.add_argument('--l', type=int, default=1)
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--seed', '-s', type=int, default=0)
