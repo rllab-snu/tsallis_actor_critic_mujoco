@@ -7,6 +7,7 @@ from spinup.algos.tac.core import get_vars
 from spinup.utils.logx import EpochLogger
 
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 import scipy.optimize
 
 def find_q_opt(K):
@@ -14,8 +15,14 @@ def find_q_opt(K):
         return ((2*x-1)/x/(1-x) + np.log(K)/(1-K**(1-x)))**2
     q_opt = scipy.optimize.fsolve(loss, 0.5)
     q_opt = q_opt[0]
-    alpha = 1e-1*np.sqrt((1-q_opt)*K**(q_opt)/q_opt/(K**(1.-q_opt)-1.))
-    return q_opt, alpha
+    alpha_scale = np.sqrt((1-q_opt)*K**(q_opt)/q_opt/(K**(1.-q_opt)-1.))
+    return q_opt, alpha_scale
+
+def silhouette(X):
+    Nc = range(2, 20)
+    kmeans = [KMeans(n_clusters=i,) for i in Nc]
+    silhouette_avg = np.array([silhouette_score(X, kmeans[i].fit_predict(X)) for i in range(len(kmeans))])
+    return Nc[np.argmax(silhouette_avg)]
 
 def elbow(X):
     Nc = range(2, 20)
@@ -57,7 +64,7 @@ class ReplayBuffer:
 def aeis(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
          steps_per_epoch=5000, epochs=200, replay_size=int(1e6), gamma=0.99,
          polyak=0.995, lr=1e-3,
-         alpha=0.2,
+         alpha=0.1,
          batch_size=100, start_steps=10000,
          max_ep_len=1000, logger_kwargs=dict(), save_freq=1):
 
@@ -241,7 +248,8 @@ def aeis(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
             # Test the performance of the deterministic version of the agent.
             test_agent()
             batch = replay_buffer.sample_batch(5000)
-            N_eff = elbow(batch['acts'])
+            #N_eff = elbow(batch['acts'])
+            N_eff = silhouette(batch['acts'])
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
@@ -265,7 +273,8 @@ def aeis(env_fn, actor_critic=core.mlp_q_actor_critic, ac_kwargs=dict(), seed=0,
             
             # Update alpha and q value
             # alpha_t = alpha()
-            q_t, alpha_t = find_q_opt(N_eff)
+            q_t, alpha_scale = find_q_opt(N_eff)
+            alpha_t = alpha*alpha_scale
 
 if __name__ == '__main__':
     import argparse
