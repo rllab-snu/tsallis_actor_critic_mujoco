@@ -40,7 +40,7 @@ class ReplayBuffer:
                     done=self.done_buf[idxs])
 
 def elbow(X):
-    Nc = range(1, 20)
+    Nc = range(2, 15)
     kmeans = [KMeans(n_clusters=i) for i in Nc]
     score = np.array([kmeans[i].fit(X).score(X) for i in range(len(kmeans))])
     diff = [score[i] - (score[-1] - score[0]) * i / (len(Nc) - 1) - score[0] for i in range(len(Nc))]
@@ -306,7 +306,7 @@ def sac(env_fn, actor_critic=core.mlp_actor_critic, ac_kwargs=dict(), seed=0,
 
             # Test the performance of the deterministic version of the agent.
             test_agent()
-            batch = replay_buffer.sample_batch(batch_size)
+            batch = replay_buffer.sample_batch(5000)
             N_eff = elbow(batch['acts'])
 
             # Log info about epoch
