@@ -6,7 +6,7 @@ from spinup.algos.td3.td3 import td3
 from spinup.algos.trpo.trpo import trpo
 from spinup.algos.vpg.vpg import vpg
 from spinup.algos.tac.tac import tac
-from spinup.algos.aeis.aeis import aeis
+#from spinup.algos.aeis.aeis import aeis
 
 # Loggers
 from spinup.utils.logx import Logger, EpochLogger
