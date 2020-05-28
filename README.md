@@ -1,5 +1,8 @@
 # Tsallis Actor Critic
-This repository provides the implementation of Tsallis actor critic (TAC) method based on [Spinningup](https://github.com/openai/spinningup) packages which is educational resource produced by OpenAI. TAC generalizes the standard Shannon-Gibbs entropy maximization in RL to the [Tsallis entropy](https://en.wikipedia.org/wiki/Tsallis_entropy). More detail theory and algorithm are explained in [Tsallis Reinforcement Learning: A Unified Framework for Maximum Entropy Reinforcement Learning](https://arxiv.org/abs/1902.00137)
+This repository provides the implementation of Tsallis actor critic (TAC) method based on [Spinningup](https://github.com/openai/spinningup) packages which is educational resource produced by OpenAI. TAC generalizes the standard Shannon-Gibbs entropy maximization in RL to the [Tsallis entropy](https://en.wikipedia.org/wiki/Tsallis_entropy).
+
+Kyungjae Lee, Sungyub Kim, Sungbin Lim, Sungjoon Choi, Mineui Hong, Jaein Kim, Yong-Lae Park and Songhwai Oh, "Generalized Tsallis Entropy Reinforcement Learning \\and Its Application to Soft Mobile Robots," in Proc. of the Robotics: Science and System (RSS), 2020.
+
 ## Installaction
 ### Prerequisite
 ```sh
